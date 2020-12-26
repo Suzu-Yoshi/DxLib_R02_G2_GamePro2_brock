@@ -33,6 +33,14 @@
 #define MOUSE_R_CLICK_TITLE		TEXT("ƒQ[ƒ€’†’f")
 #define MOUSE_R_CLICK_CAPTION	TEXT("ƒQ[ƒ€‚ð’†’f‚µAƒ^ƒCƒgƒ‹‰æ–Ê‚É–ß‚è‚Ü‚·‚©H")
 
+//ƒtƒHƒ“ƒg
+#define FONT_TANU_PATH			TEXT(".\\TanukiMagic.ttf")			//ƒtƒHƒ“ƒg‚ÌêŠ
+#define FONT_TANU_NAME			TEXT("‚½‚Ê‚«–û«ƒ}ƒWƒbƒN")			//ƒtƒHƒ“ƒg‚Ì–¼‘O
+
+//ƒGƒ‰[ƒƒbƒZ[ƒW
+#define FONT_INSTALL_ERR_TITLE	TEXT("ƒtƒHƒ“ƒgƒCƒ“ƒXƒg[ƒ‹ƒGƒ‰[")
+#define FONT_CREATE_ERR_TITLE	TEXT("ƒtƒHƒ“ƒgì¬ƒGƒ‰[")
+
 //########## —ñ‹“Œ^ ##########
 enum GAME_SCENE {
 	GAME_SCENE_START,
@@ -87,6 +95,9 @@ BOOL MY_KEY_PUSH(int KEY_INPUT_);				//ƒL[‚ðƒvƒbƒVƒ…‚µ‚½‚©AƒL[ƒR[ƒh‚Å”»’f‚·‚
 
 void DrawBoxRect(RECT r, unsigned int color, bool b);			//RECT‚ð—˜—p‚µ‚ÄŽlŠp‚ð•`‰æ
 
+BOOL MY_FONT_INSTALL_ONCE(VOID);	//ƒtƒHƒ“ƒg‚ð‚±‚Ìƒ\ƒtƒg—p‚ÉAˆêŽž“I‚ÉƒCƒ“ƒXƒg[ƒ‹
+VOID MY_FONT_UNINSTALL_ONCE(VOID);	//ƒtƒHƒ“ƒg‚ð‚±‚Ìƒ\ƒtƒg—p‚ÉAˆêŽž“I‚ÉƒAƒ“ƒCƒ“ƒXƒg[ƒ‹
+
 //########## ƒvƒƒOƒ‰ƒ€‚ÅÅ‰‚ÉŽÀs‚³‚ê‚éŠÖ” ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -102,6 +113,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	//DrawŒnŠÖ”‚Í— ‰æ–Ê‚É•`‰æ
 	SetDrawScreen(DX_SCREEN_BACK);
+
+	//ƒtƒHƒ“ƒg‚ðˆêŽž“I‚ÉƒCƒ“ƒXƒg[ƒ‹
+	if (MY_FONT_INSTALL_ONCE() == FALSE) { return -1; }
 
 	//ƒQ[ƒ€ƒV[ƒ“‚ÍƒXƒ^[ƒg‰æ–Ê‚©‚ç
 	GameScene = GAME_SCENE_START;
@@ -139,6 +153,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		MY_FPS_WAIT();		//FPS‚Ìˆ—[‘Ò‚Â]
 	}
+
+	//ˆêŽž“I‚ÉƒCƒ“ƒXƒg[ƒ‹‚µ‚½ƒtƒHƒ“ƒg‚ðƒAƒ“ƒCƒ“ƒXƒg[ƒ‹
+	MY_FONT_UNINSTALL_ONCE();
 
 	DxLib_End();	//‚c‚wƒ‰ƒCƒuƒ‰ƒŠŽg—p‚ÌI—¹ˆ—
 
@@ -398,4 +415,27 @@ BOOL MY_CHECK_RECT_COLL(RECT a, RECT b)
 	}
 
 	return FALSE;		//“–‚½‚Á‚Ä‚¢‚È‚¢
+}
+
+//ƒtƒHƒ“ƒg‚ð‚±‚Ìƒ\ƒtƒg—p‚ÉAˆêŽž“I‚ÉƒCƒ“ƒXƒg[ƒ‹
+BOOL MY_FONT_INSTALL_ONCE(VOID)
+{
+	//ƒtƒHƒ“ƒg‚ðˆêŽž“I‚É“Ç‚Ýž‚Ý(WinAPI)
+	if (AddFontResourceEx(FONT_TANU_PATH, FR_PRIVATE, NULL) == 0)
+	{
+		//ƒGƒ‰[ƒƒbƒZ[ƒW•\Ž¦
+		MessageBox(GetMainWindowHandle(), FONT_TANU_NAME, FONT_INSTALL_ERR_TITLE, MB_OK);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+//ƒtƒHƒ“ƒg‚ð‚±‚Ìƒ\ƒtƒg—p‚ÉAˆêŽž“I‚ÉƒAƒ“ƒCƒ“ƒXƒg[ƒ‹
+VOID MY_FONT_UNINSTALL_ONCE(VOID)
+{
+	//ˆêŽž“I‚É“Ç‚Ýž‚ñ‚¾ƒtƒHƒ“ƒg‚ðíœ(WinAPI)
+	RemoveFontResourceEx(FONT_TANU_PATH, FR_PRIVATE, NULL);
+
+	return;
 }
