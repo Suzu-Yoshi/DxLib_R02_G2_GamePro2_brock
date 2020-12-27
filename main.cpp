@@ -306,7 +306,7 @@ VOID MY_PLAY_INIT(VOID)
 	ball.centerX = GAME_WIDTH / 2;
 	ball.centerY = BLOCK_UNDER_HEIGHT + ball.hankei;
 	ball.speed = 2;
-	ball.Angle = 90;	//デフォルトは下向き
+	ball.Angle = 30;	//デフォルトは下向き
 
 	//ゲームスコア初期化
 	GameTokuten = 0;
@@ -377,12 +377,34 @@ VOID MY_PLAY_PROC(VOID)
 	ball.centerY += sin(ball.Angle * DX_PI / 180.0) * ball.speed;
 
 	//ボールと画面外の判定
-	if (ball.centerX - ball.hankei < 0
-		|| ball.centerX + ball.hankei > GAME_WIDTH
-		|| ball.centerY - ball.hankei < 0
-		|| ball.centerY + ball.hankei > GAME_HEIGHT)
+	if (ball.centerX - ball.hankei < 0)
 	{
-		ball.Angle = -ball.Angle;	//向きを反転
+		ball.centerX = 0 + ball.hankei;			//位置を修正
+		ball.Angle = 180 - ball.Angle;						//向きを反転
+		if (ball.speed > 1) { ball.speed--; }	//スピードダウン
+	}
+
+	if (ball.centerX + ball.hankei > GAME_WIDTH)
+	{
+		ball.centerX = GAME_WIDTH - ball.hankei;	//位置を修正
+		ball.Angle = 180 - ball.Angle;							//向きを反転
+		if (ball.speed > 1) { ball.speed--; }		//スピードダウン
+	}
+
+
+	if (ball.centerY - ball.hankei < 0)
+	{
+		ball.centerY = 0 + ball.hankei;			//位置を修正
+		ball.Angle += 90;						//向きを反転
+		if (ball.speed > 1) { ball.speed--; }	//スピードダウン
+	}
+
+
+	if (ball.centerY + ball.hankei > GAME_HEIGHT)
+	{
+		ball.centerY = GAME_HEIGHT - ball.hankei;	//位置を修正
+		ball.Angle += 90;							//向きを反転
+		if (ball.speed > 1) { ball.speed--; }		//スピードダウン
 	}
 
 	//ボールとバーの当たり判定
@@ -410,6 +432,7 @@ VOID MY_CHECK_BAR_BALL(VOID)
 		if (IsOldColl == FALSE && IsNewColl == TRUE)
 		{
 			ball.Angle = -ball.Angle;	//向きを反転
+			ball.speed+=2;				//スピードアップ
 		}
 	}
 	else
@@ -532,7 +555,9 @@ VOID MY_CHECK_BALL_BLOCK(VOID)
 				//ボールとブロックの当たり判定
 				if (MY_CHECK_BALL_BLOCK_COLL(blockColl[tate][yoko]) == TRUE)
 				{
-					ball.Angle = -ball.Angle;	//向きを反転
+					ball.Angle =180 - ball.Angle;	//向きを反転
+
+					ball.speed++;		//スピードアップ
 
 					//該当するブロックを消す
 					blockKind[tate][yoko] = N;
