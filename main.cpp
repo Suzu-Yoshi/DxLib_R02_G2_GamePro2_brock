@@ -59,6 +59,18 @@ typedef struct STRUCT_IMAGE
 	int height;					//高さ
 }IMAGE;	//画像構造体
 
+typedef struct STRUCT_BAR
+{
+	int x;
+	int y;
+	int width;
+	int height;
+	int speed;
+
+	RECT coll;	//当たり判定
+
+}BAR;	//バー構造体
+
 //########## グローバル変数 ##########
 //FPS関連
 int StartTimeFps;				//測定開始時刻
@@ -72,6 +84,12 @@ char OldAllKeyState[KEY_MAX];	//すべてのキーの状態(直前)が入る
 //ゲーム関連
 GAME_SCENE GameScene;			//ゲームのシーンを管理
 
+//バー
+BAR bar;	
+
+//ゲームスコア
+int GameTokuten = 0;
+
 //########## 外部のプロトタイプ宣言 ##########
 VOID MY_FPS_UPDATE(VOID);	//FPS値を計測、更新する
 VOID MY_FPS_DRAW(VOID);		//FPS値を描画する
@@ -80,6 +98,7 @@ VOID MY_FPS_WAIT(VOID);		//FPS値を計測し、待つ
 VOID MY_START(VOID);		//スタート画面
 VOID MY_START_PROC(VOID);	//スタート画面
 VOID MY_START_DRAW(VOID);	//スタート画面
+VOID MY_PLAY_INIT(VOID);	//プレイ画面(初期化)
 VOID MY_PLAY(VOID);			//プレイ画面
 VOID MY_PLAY_PROC(VOID);	//プレイ画面
 VOID MY_PLAY_DRAW(VOID);	//プレイ画面
@@ -177,6 +196,9 @@ VOID MY_START_PROC(VOID)
 	//スペースキーを押したら、プレイシーンへ移動する
 	if (MY_KEY_PUSH(KEY_INPUT_SPACE) == TRUE)
 	{
+		//プレイ画面を初期化
+		MY_PLAY_INIT();
+
 		//プレイ画面へ
 		GameScene = GAME_SCENE_PLAY;
 	}
@@ -189,6 +211,23 @@ VOID MY_START_DRAW(VOID)
 {
 
 	DrawString(0, 0, "スタート画面(エンターキーを押して下さい)", GetColor(255, 255, 255));
+	return;
+}
+
+//プレイ画面(初期化)
+VOID MY_PLAY_INIT(VOID)
+{
+
+	//バー初期化
+	bar.width = 200;	//バーの幅
+	bar.height = 25;	//バーの高さ
+	bar.speed = 4;		//バーの速さ
+	bar.x = GAME_WIDTH / 2 - bar.width / 2;	//バーの初期位置は画面の中心
+	bar.y = GAME_HEIGHT - 100;				//バーの初期位置は画面の下寄り
+
+	//ゲームスコア初期化
+	GameTokuten = 0;
+
 	return;
 }
 
@@ -212,12 +251,59 @@ VOID MY_PLAY_PROC(VOID)
 		return;
 	}
 
+	//右キーを押したら、バーが右へ移動する
+	if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE)
+	{
+		//バーが画面外に行かないようにする
+		if (bar.x + bar.width + bar.speed <= GAME_WIDTH)
+		{
+			bar.x += bar.speed;	//バーの位置を変える
+		}
+	}
+
+	//左キーを押したら、バーが右へ移動する
+	if (MY_KEY_DOWN(KEY_INPUT_LEFT) == TRUE)
+	{
+		//バーが画面外に行かないようにする
+		if (bar.x - bar.speed >= 0)
+		{
+			bar.x -= bar.speed;	//バーの位置を変える
+		}
+	}
+
+	//バーの当たり判定領域を再計算
+	bar.coll.left = bar.x;
+	bar.coll.top = bar.y;
+	bar.coll.right = bar.x + bar.width;
+	bar.coll.bottom = bar.y + bar.height;
+
 	return;
 }
 
 //プレイ画面の描画
 VOID MY_PLAY_DRAW(VOID)
 {
+
+	//バーの描画
+	DrawBox(
+		bar.x,
+		bar.y,
+		bar.x + bar.width,
+		bar.y + bar.height,
+		GetColor(0, 255, 0),
+		TRUE);
+
+	//バーの当たり判定を描画
+	DrawBox(
+		bar.coll.left,
+		bar.coll.top,
+		bar.coll.right,
+		bar.coll.bottom,
+		GetColor(255, 0, 0),
+		FALSE);
+
+	//ゲームスコア描画
+	DrawFormatString(0, 20, GetColor(255, 255, 255), "SCORE:%05d", GameTokuten);
 
 	DrawString(0, 0, "プレイ画面(スペースキーを押して下さい)", GetColor(255, 255, 255));
 	return;
