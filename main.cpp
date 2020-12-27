@@ -62,13 +62,13 @@ enum GAME_SCENE {
 };	//ゲームのシーン
 
 enum BLOCK_KIND {
+	N,	//なにもない
 	R,	//赤
 	G,	//緑
 	B,	//青
 	Y,	//黄
 	P,	//ピンク
-	W,	//白
-	N	//なにもない
+	W	//白
 };
 
 //########## 構造体の宣言 ##########
@@ -89,9 +89,6 @@ typedef struct STRUCT_BAR
 	int width;
 	int height;
 	int speed;
-
-	RECT coll;	//当たり判定
-
 }BAR;	//バー構造体
 
 typedef struct STRCUT_BALL
@@ -171,6 +168,9 @@ void DrawBoxRect(RECT r, unsigned int color, bool b);			//RECTを利用して四角を描
 
 BOOL MY_FONT_INSTALL_ONCE(VOID);	//フォントをこのソフト用に、一時的にインストール
 VOID MY_FONT_UNINSTALL_ONCE(VOID);	//フォントをこのソフト用に、一時的にアンインストール
+
+
+BOOL MY_CHECK_BAR_BALL(VOID);		//ボールとバーの当たり判定
 
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -289,7 +289,7 @@ VOID MY_PLAY_INIT(VOID)
 	}
 
 	//バー初期化
-	bar.width = 200;	//バーの幅
+	bar.width = 100;	//バーの幅
 	bar.height = 25;	//バーの高さ
 	bar.speed = 4;		//バーの速さ
 	bar.x = GAME_WIDTH / 2 - bar.width / 2;	//バーの初期位置は画面の中心
@@ -300,7 +300,7 @@ VOID MY_PLAY_INIT(VOID)
 	ball.centerX = GAME_WIDTH / 2;
 	ball.centerY = BLOCK_UNDER_HEIGHT + ball.hankei;
 	ball.speed = 2;
-	ball.Angle = 0;	//デフォルトは下向き
+	ball.Angle = 90;	//デフォルトは下向き
 
 	//ゲームスコア初期化
 	GameTokuten = 0;
@@ -366,8 +366,123 @@ VOID MY_PLAY_PROC(VOID)
 	//弧度(ラジアン)＝度×円周率(π)/１８０
 	ball.centerX += cos(ball.Angle * DX_PI / 180.0) * ball.speed;
 	ball.centerY += sin(ball.Angle * DX_PI / 180.0) * ball.speed;
-	ball.Angle++;
+
+	//ボールと画面外の判定
+	if (ball.centerX - ball.hankei < 0
+		|| ball.centerX + ball.hankei > GAME_WIDTH
+		|| ball.centerY - ball.hankei < 0
+		|| ball.centerY + ball.hankei > GAME_WIDTH)
+	{
+		ball.Angle = -ball.Angle;	//向きを反転
+	}
+	
+	//ボールとバーの当たり判定
+	if (MY_CHECK_BAR_BALL() == TRUE)
+	{
+		ball.Angle = -ball.Angle;	//向きを反転
+	}
+
 	return;
+}
+
+//ボールとバーの当たり判定
+BOOL MY_CHECK_BAR_BALL(VOID)
+{
+	//四角と円の当たり判定
+	//参考：http://ftvoid.com/blog/post/300
+
+	//バーの四角領域×２
+	RECT sikaku_a;	//領域A（縦長）の四角
+	RECT sikaku_b;	//領域B（横長）の四角
+
+	//領域A（縦長）の四角
+	sikaku_a.left = bar.x;
+	sikaku_a.top = bar.y - ball.hankei;
+	sikaku_a.right = bar.x + bar.width;
+	sikaku_a.bottom = bar.y + bar.height + ball.hankei;
+
+	//領域A（縦長）の当たり判定
+	if (sikaku_a.left < ball.centerX &&
+		sikaku_a.top <  ball.centerY &&
+		sikaku_a.right >  ball.centerX &&
+		sikaku_a.bottom >  ball.centerY)
+	{
+		return TRUE;
+	}
+
+	//領域B（横長）の四角
+	sikaku_b.left = bar.x - ball.hankei;
+	sikaku_b.top = bar.y;
+	sikaku_b.right = bar.x + bar.width + ball.hankei;
+	sikaku_b.bottom = bar.y + bar.height;
+
+	//領域B（横長）の当たり判定
+	if (sikaku_b.left < ball.centerX &&
+		sikaku_b.top <  ball.centerY &&
+		sikaku_b.right >  ball.centerX &&
+		sikaku_b.bottom >  ball.centerY)
+	{
+		return TRUE;
+	}
+
+	//三平方の定理
+	int a;
+	int b;
+	int c;
+
+	//円領域１(左上)
+	int en1_x = bar.x;
+	int en1_y = bar.y;
+
+	//円領域１との当たり判定
+	a = en1_x - ball.centerX;	
+	b = en1_y - ball.centerY;	
+	c = pow(a, 2.0) + pow(b, 2.0);		
+	c = sqrt(c);	
+
+	//円領域１の中心からボール中心の距離が、円領域１の半径＋ボールの半径よりも短いとき
+	if (c <= ball.hankei){return TRUE;}
+
+	//円領域２（左下）
+	int en2_x = bar.x;
+	int en2_y = bar.y + bar.height;
+
+	//円領域２との当たり判定
+	a = en2_x - ball.centerX;
+	b = en2_y - ball.centerY;
+	c = pow(a, 2.0) + pow(b, 2.0);
+	c = sqrt(c);
+
+	//円領域２の中心からボール中心の距離が、円領域２の半径＋ボールの半径よりも短いとき
+	if (c <= ball.hankei) { return TRUE; }
+
+	//円領域３（右上）
+	int en3_x = bar.x + bar.width;
+	int en3_y = bar.y;
+
+	//円領域３との当たり判定
+	a = en3_x - ball.centerX;
+	b = en3_y - ball.centerY;
+	c = pow(a, 2.0) + pow(b, 2.0);
+	c = sqrt(c);
+
+	//円領域３の中心からボール中心の距離が、円領域３の半径＋ボールの半径よりも短いとき
+	if (c <= ball.hankei) { return TRUE; }
+
+	//円領域４（右上）
+	int en4_x = bar.x + bar.width;
+	int en4_y = bar.y;
+
+	//円領域４との当たり判定
+	a = en4_x - ball.centerX;
+	b = en4_y - ball.centerY;
+	c = pow(a, 2.0) + pow(b, 2.0);
+	c = sqrt(c);
+
+	//円領域４の中心からボール中心の距離が、円領域４の半径＋ボールの半径よりも短いとき
+	if (c <= ball.hankei) { return TRUE; }
+
+	return FALSE;
 }
 
 //プレイ画面の描画
