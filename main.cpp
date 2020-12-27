@@ -175,6 +175,9 @@ VOID MY_FONT_UNINSTALL_ONCE(VOID);	//ƒtƒHƒ“ƒg‚ğ‚±‚Ìƒ\ƒtƒg—p‚ÉAˆê“I‚ÉƒAƒ“ƒCƒ“ƒ
 VOID MY_CHECK_BAR_BALL(VOID);			//ƒ{[ƒ‹‚Æƒo[‚Ì“–‚½‚è”»’è
 BOOL MY_CHECK_BAR_BALL_COLL(VOID);		//ƒ{[ƒ‹‚Æƒo[‚Ì“–‚½‚è”»’è(ˆ—)
 
+VOID MY_CHECK_BALL_BLOCK(VOID);			//ƒ{[ƒ‹‚ÆƒuƒƒbƒN‚Ì“–‚½‚è”»’è
+BOOL MY_CHECK_BALL_BLOCK_COLL(RECT r);	//ƒ{[ƒ‹‚ÆƒuƒƒbƒN‚Ì“–‚½‚è”»’è(ˆ—)
+
 //########## ƒvƒƒOƒ‰ƒ€‚ÅÅ‰‚ÉÀs‚³‚ê‚éŠÖ” ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -373,15 +376,6 @@ VOID MY_PLAY_PROC(VOID)
 	ball.centerX += cos(ball.Angle * DX_PI / 180.0) * ball.speed;
 	ball.centerY += sin(ball.Angle * DX_PI / 180.0) * ball.speed;
 
-	//ƒ{[ƒ‹‚Æƒo[‚Ì“–‚½‚è”»’è
-	MY_CHECK_BAR_BALL();
-
-	return;
-}
-
-//ƒ{[ƒ‹‚Æƒo[‚Ì“–‚½‚è”»’è
-VOID MY_CHECK_BAR_BALL(VOID)
-{
 	//ƒ{[ƒ‹‚Æ‰æ–ÊŠO‚Ì”»’è
 	if (ball.centerX - ball.hankei < 0
 		|| ball.centerX + ball.hankei > GAME_WIDTH
@@ -391,6 +385,18 @@ VOID MY_CHECK_BAR_BALL(VOID)
 		ball.Angle = -ball.Angle;	//Œü‚«‚ğ”½“]
 	}
 
+	//ƒ{[ƒ‹‚Æƒo[‚Ì“–‚½‚è”»’è
+	MY_CHECK_BAR_BALL();
+
+	//ƒ{[ƒ‹‚ÆƒuƒƒbƒN‚Ì“–‚½‚è”»’è
+	MY_CHECK_BALL_BLOCK();
+
+	return;
+}
+
+//ƒ{[ƒ‹‚Æƒo[‚Ì“–‚½‚è”»’è
+VOID MY_CHECK_BAR_BALL(VOID)
+{
 	//’¼‘O‚Ì“–‚½‚è”»’èî•ñ‚ğæ“¾
 	IsOldColl = IsNewColl;
 
@@ -463,13 +469,13 @@ BOOL MY_CHECK_BAR_BALL_COLL(VOID)
 	int en1_y = bar.y;
 
 	//‰~—Ìˆæ‚P‚Æ‚Ì“–‚½‚è”»’è
-	a = en1_x - ball.centerX;	
-	b = en1_y - ball.centerY;	
-	c = pow(a, 2.0) + pow(b, 2.0);		
-	c = sqrt(c);	
+	a = en1_x - ball.centerX;
+	b = en1_y - ball.centerY;
+	c = pow(a, 2.0) + pow(b, 2.0);
+	c = sqrt(c);
 
 	//‰~—Ìˆæ‚P‚Ì’†S‚©‚çƒ{[ƒ‹’†S‚Ì‹——£‚ªA‰~—Ìˆæ‚P‚Ì”¼Œa{ƒ{[ƒ‹‚Ì”¼Œa‚æ‚è‚à’Z‚¢‚Æ‚«
-	if (c <= ball.hankei){return TRUE;}
+	if (c <= ball.hankei) { return TRUE; }
 
 	//‰~—Ìˆæ‚Qi¶‰ºj
 	int en2_x = bar.x;
@@ -497,9 +503,135 @@ BOOL MY_CHECK_BAR_BALL_COLL(VOID)
 	//‰~—Ìˆæ‚R‚Ì’†S‚©‚çƒ{[ƒ‹’†S‚Ì‹——£‚ªA‰~—Ìˆæ‚R‚Ì”¼Œa{ƒ{[ƒ‹‚Ì”¼Œa‚æ‚è‚à’Z‚¢‚Æ‚«
 	if (c <= ball.hankei) { return TRUE; }
 
-	//‰~—Ìˆæ‚Si‰Eãj
+	//‰~—Ìˆæ‚Si‰E‰ºj
 	int en4_x = bar.x + bar.width;
 	int en4_y = bar.y;
+
+	//‰~—Ìˆæ‚S‚Æ‚Ì“–‚½‚è”»’è
+	a = en4_x - ball.centerX;
+	b = en4_y - ball.centerY;
+	c = pow(a, 2.0) + pow(b, 2.0);
+	c = sqrt(c);
+
+	//‰~—Ìˆæ‚S‚Ì’†S‚©‚çƒ{[ƒ‹’†S‚Ì‹——£‚ªA‰~—Ìˆæ‚S‚Ì”¼Œa{ƒ{[ƒ‹‚Ì”¼Œa‚æ‚è‚à’Z‚¢‚Æ‚«
+	if (c <= ball.hankei) { return TRUE; }
+
+	return FALSE;
+}
+
+//ƒ{[ƒ‹‚ÆƒuƒƒbƒN‚Ì“–‚½‚è”»’è
+VOID MY_CHECK_BALL_BLOCK(VOID)
+{
+	for (int tate = 0; tate < BLOCK_TATE_MAX; tate++)
+	{
+		for (int yoko = 0; yoko < BLOCK_YOKO_MAX; yoko++)
+		{
+			//ƒuƒƒbƒN‚ª‚ ‚é‚Æ‚«
+			if (blockKind[tate][yoko] != N)
+			{
+				//ƒ{[ƒ‹‚ÆƒuƒƒbƒN‚Ì“–‚½‚è”»’è
+				if (MY_CHECK_BALL_BLOCK_COLL(blockColl[tate][yoko]) == TRUE)
+				{
+					ball.Angle = -ball.Angle;	//Œü‚«‚ğ”½“]
+
+					//ŠY“–‚·‚éƒuƒƒbƒN‚ğÁ‚·
+					blockKind[tate][yoko] = N;
+
+					return;
+				}
+			}
+		}
+	}
+	return;
+}
+
+//ƒ{[ƒ‹‚Æƒo[‚Ì“–‚½‚è”»’è(ˆ—)
+BOOL MY_CHECK_BALL_BLOCK_COLL(RECT r)
+{
+	//lŠp‚Æ‰~‚Ì“–‚½‚è”»’è
+	//QlFhttp://ftvoid.com/blog/post/300
+
+	//ƒo[‚ÌlŠp—Ìˆæ~‚Q
+	RECT sikaku_a;	//—ÌˆæAic’·j‚ÌlŠp
+	RECT sikaku_b;	//—ÌˆæBi‰¡’·j‚ÌlŠp
+
+	//—ÌˆæAic’·j‚ÌlŠp
+	sikaku_a.left = r.left;
+	sikaku_a.top = r.top - ball.hankei;
+	sikaku_a.right = r.right;
+	sikaku_a.bottom = r.bottom + ball.hankei;
+
+	//—ÌˆæAic’·j‚Ì“–‚½‚è”»’è
+	if (sikaku_a.left < ball.centerX &&
+		sikaku_a.top <  ball.centerY &&
+		sikaku_a.right >  ball.centerX &&
+		sikaku_a.bottom >  ball.centerY)
+	{
+		return TRUE;
+	}
+
+	//—ÌˆæBi‰¡’·j‚ÌlŠp
+	sikaku_b.left = r.left - ball.hankei;
+	sikaku_b.top = r.top;
+	sikaku_b.right = r.right + ball.hankei;
+	sikaku_b.bottom = r.bottom;
+
+	//—ÌˆæBi‰¡’·j‚Ì“–‚½‚è”»’è
+	if (sikaku_b.left < ball.centerX &&
+		sikaku_b.top <  ball.centerY &&
+		sikaku_b.right >  ball.centerX &&
+		sikaku_b.bottom >  ball.centerY)
+	{
+		return TRUE;
+	}
+
+	//O•½•û‚Ì’è—
+	int a;
+	int b;
+	int c;
+
+	//‰~—Ìˆæ‚P(¶ã)
+	int en1_x = r.left;
+	int en1_y = r.top;
+
+	//‰~—Ìˆæ‚P‚Æ‚Ì“–‚½‚è”»’è
+	a = en1_x - ball.centerX;
+	b = en1_y - ball.centerY;
+	c = pow(a, 2.0) + pow(b, 2.0);
+	c = sqrt(c);
+
+	//‰~—Ìˆæ‚P‚Ì’†S‚©‚çƒ{[ƒ‹’†S‚Ì‹——£‚ªA‰~—Ìˆæ‚P‚Ì”¼Œa{ƒ{[ƒ‹‚Ì”¼Œa‚æ‚è‚à’Z‚¢‚Æ‚«
+	if (c <= ball.hankei) { return TRUE; }
+
+	//‰~—Ìˆæ‚Qi¶‰ºj
+	int en2_x = r.left;
+	int en2_y = r.bottom;
+
+	//‰~—Ìˆæ‚Q‚Æ‚Ì“–‚½‚è”»’è
+	a = en2_x - ball.centerX;
+	b = en2_y - ball.centerY;
+	c = pow(a, 2.0) + pow(b, 2.0);
+	c = sqrt(c);
+
+	//‰~—Ìˆæ‚Q‚Ì’†S‚©‚çƒ{[ƒ‹’†S‚Ì‹——£‚ªA‰~—Ìˆæ‚Q‚Ì”¼Œa{ƒ{[ƒ‹‚Ì”¼Œa‚æ‚è‚à’Z‚¢‚Æ‚«
+	if (c <= ball.hankei) { return TRUE; }
+
+	//‰~—Ìˆæ‚Ri‰Eãj
+	int en3_x = r.right;
+	int en3_y = r.top;
+
+	//‰~—Ìˆæ‚R‚Æ‚Ì“–‚½‚è”»’è
+	a = en3_x - ball.centerX;
+	b = en3_y - ball.centerY;
+	c = pow(a, 2.0) + pow(b, 2.0);
+	c = sqrt(c);
+
+	//‰~—Ìˆæ‚R‚Ì’†S‚©‚çƒ{[ƒ‹’†S‚Ì‹——£‚ªA‰~—Ìˆæ‚R‚Ì”¼Œa{ƒ{[ƒ‹‚Ì”¼Œa‚æ‚è‚à’Z‚¢‚Æ‚«
+	if (c <= ball.hankei) { return TRUE; }
+
+	//‰~—Ìˆæ‚Si‰E‰ºj
+	int en4_x = r.right;
+	int en4_y = r.bottom;
 
 	//‰~—Ìˆæ‚S‚Æ‚Ì“–‚½‚è”»’è
 	a = en4_x - ball.centerX;
