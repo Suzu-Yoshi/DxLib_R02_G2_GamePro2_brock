@@ -41,12 +41,35 @@
 #define FONT_INSTALL_ERR_TITLE	TEXT("フォントインストールエラー")
 #define FONT_CREATE_ERR_TITLE	TEXT("フォント作成エラー")
 
+//バーの下からの高さ
+#define BAR_UNDER_HEIGHT	100
+
+//ブロックの数
+#define BLOCK_TATE_MAX	6
+#define BLOCK_YOKO_MAX	10
+
+//ブロックの一番下の位置
+#define BLOCK_UNDER_HEIGHT	(GAME_HEIGHT - BAR_UNDER_HEIGHT - 200)
+
+#define BLOCK_WIDTH		(GAME_WIDTH / BLOCK_YOKO_MAX)						//ブロックの幅
+#define BLOCK_HEIGHT	(BLOCK_UNDER_HEIGHT / BLOCK_TATE_MAX)				//ブロックの高さ
+
 //########## 列挙型 ##########
 enum GAME_SCENE {
 	GAME_SCENE_START,
 	GAME_SCENE_PLAY,
 	GAME_SCENE_END,
 };	//ゲームのシーン
+
+enum BLOCK_KIND {
+	R,	//赤
+	G,	//緑
+	B,	//青
+	Y,	//黄
+	P,	//ピンク
+	W,	//白
+	N	//なにもない
+};
 
 //########## 構造体の宣言 ##########
 typedef struct STRUCT_IMAGE
@@ -85,10 +108,24 @@ char OldAllKeyState[KEY_MAX];	//すべてのキーの状態(直前)が入る
 GAME_SCENE GameScene;			//ゲームのシーンを管理
 
 //バー
-BAR bar;	
+BAR bar;
 
 //ゲームスコア
 int GameTokuten = 0;
+
+//ブロック
+BLOCK_KIND blockKind[BLOCK_TATE_MAX][BLOCK_YOKO_MAX]
+{
+	{R,R,R,R,R,R,R,R,R,R},
+	{G,G,G,G,G,G,G,G,G,G},
+	{B,B,B,B,B,B,B,B,B,B},
+	{Y,Y,Y,Y,Y,Y,Y,Y,Y,Y},
+	{P,P,P,P,P,P,P,P,P,P},
+	{W,W,W,W,W,W,W,W,W,W},
+};
+
+//ブロックの当たり判定
+RECT blockColl[BLOCK_TATE_MAX][BLOCK_YOKO_MAX];
 
 //########## 外部のプロトタイプ宣言 ##########
 VOID MY_FPS_UPDATE(VOID);	//FPS値を計測、更新する
@@ -217,13 +254,25 @@ VOID MY_START_DRAW(VOID)
 //プレイ画面(初期化)
 VOID MY_PLAY_INIT(VOID)
 {
+	//ブロック初期化
+	for (int tate = 0; tate < BLOCK_TATE_MAX; tate++)
+	{
+		for (int yoko = 0; yoko < BLOCK_YOKO_MAX; yoko++)
+		{
+			//ブロックの当たり判定領域を設定
+			blockColl[tate][yoko].left = (yoko + 0) * BLOCK_WIDTH + 1;
+			blockColl[tate][yoko].top = (tate + 0) * BLOCK_HEIGHT + 1;
+			blockColl[tate][yoko].right = (yoko + 1) * BLOCK_WIDTH - 1;
+			blockColl[tate][yoko].bottom = (tate + 1) * BLOCK_HEIGHT - 1;
+		}
+	}
 
 	//バー初期化
 	bar.width = 200;	//バーの幅
 	bar.height = 25;	//バーの高さ
 	bar.speed = 4;		//バーの速さ
 	bar.x = GAME_WIDTH / 2 - bar.width / 2;	//バーの初期位置は画面の中心
-	bar.y = GAME_HEIGHT - 100;				//バーの初期位置は画面の下寄り
+	bar.y = GAME_HEIGHT - BAR_UNDER_HEIGHT;	//バーの初期位置は画面の下寄り
 
 	//ゲームスコア初期化
 	GameTokuten = 0;
@@ -271,18 +320,85 @@ VOID MY_PLAY_PROC(VOID)
 		}
 	}
 
-	//バーの当たり判定領域を再計算
-	bar.coll.left = bar.x;
-	bar.coll.top = bar.y;
-	bar.coll.right = bar.x + bar.width;
-	bar.coll.bottom = bar.y + bar.height;
-
 	return;
 }
 
 //プレイ画面の描画
 VOID MY_PLAY_DRAW(VOID)
 {
+	//ブロック描画
+	for (int tate = 0; tate < BLOCK_TATE_MAX; tate++)
+	{
+		for (int yoko = 0; yoko < BLOCK_YOKO_MAX; yoko++)
+		{
+			switch (blockKind[tate][yoko])
+			{
+			case R:
+				DrawBox(
+					blockColl[tate][yoko].left,
+					blockColl[tate][yoko].top,
+					blockColl[tate][yoko].right,
+					blockColl[tate][yoko].bottom,
+					GetColor(255, 0, 0),
+					TRUE);
+				break;
+
+			case G:
+				DrawBox(
+					blockColl[tate][yoko].left,
+					blockColl[tate][yoko].top,
+					blockColl[tate][yoko].right,
+					blockColl[tate][yoko].bottom,
+					GetColor(0, 255, 0),
+					TRUE);
+				break;
+
+			case B:
+				DrawBox(
+					blockColl[tate][yoko].left,
+					blockColl[tate][yoko].top,
+					blockColl[tate][yoko].right,
+					blockColl[tate][yoko].bottom,
+					GetColor(0, 0, 255),
+					TRUE);
+				break;
+
+			case Y:
+				DrawBox(
+					blockColl[tate][yoko].left,
+					blockColl[tate][yoko].top,
+					blockColl[tate][yoko].right,
+					blockColl[tate][yoko].bottom,
+					GetColor(255, 255, 0),
+					TRUE);
+				break;
+
+			case P:
+				DrawBox(
+					blockColl[tate][yoko].left,
+					blockColl[tate][yoko].top,
+					blockColl[tate][yoko].right,
+					blockColl[tate][yoko].bottom,
+					GetColor(255, 0, 255),
+					TRUE);
+				break;
+
+			case W:
+				DrawBox(
+					blockColl[tate][yoko].left,
+					blockColl[tate][yoko].top,
+					blockColl[tate][yoko].right,
+					blockColl[tate][yoko].bottom,
+					GetColor(255, 255, 255),
+					TRUE);
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
 
 	//バーの描画
 	DrawBox(
@@ -292,15 +408,6 @@ VOID MY_PLAY_DRAW(VOID)
 		bar.y + bar.height,
 		GetColor(0, 255, 0),
 		TRUE);
-
-	//バーの当たり判定を描画
-	DrawBox(
-		bar.coll.left,
-		bar.coll.top,
-		bar.coll.right,
-		bar.coll.bottom,
-		GetColor(255, 0, 0),
-		FALSE);
 
 	//ゲームスコア描画
 	DrawFormatString(0, 20, GetColor(255, 255, 255), "SCORE:%05d", GameTokuten);
