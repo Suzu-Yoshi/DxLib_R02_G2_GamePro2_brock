@@ -142,6 +142,9 @@ RECT blockColl[BLOCK_TATE_MAX][BLOCK_YOKO_MAX];
 //スタートボタンを押したか
 BOOL IsStart = FALSE;
 
+BOOL IsOldColl = FALSE; //直前に当たっていたか
+BOOL IsNewColl = FALSE; //現在に当たっていたか
+
 //########## 外部のプロトタイプ宣言 ##########
 VOID MY_FPS_UPDATE(VOID);	//FPS値を計測、更新する
 VOID MY_FPS_DRAW(VOID);		//FPS値を描画する
@@ -169,8 +172,8 @@ void DrawBoxRect(RECT r, unsigned int color, bool b);			//RECTを利用して四角を描
 BOOL MY_FONT_INSTALL_ONCE(VOID);	//フォントをこのソフト用に、一時的にインストール
 VOID MY_FONT_UNINSTALL_ONCE(VOID);	//フォントをこのソフト用に、一時的にアンインストール
 
-
-BOOL MY_CHECK_BAR_BALL(VOID);		//ボールとバーの当たり判定
+VOID MY_CHECK_BAR_BALL(VOID);			//ボールとバーの当たり判定
+BOOL MY_CHECK_BAR_BALL_COLL(VOID);		//ボールとバーの当たり判定(処理)
 
 //########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -305,6 +308,9 @@ VOID MY_PLAY_INIT(VOID)
 	//ゲームスコア初期化
 	GameTokuten = 0;
 
+	IsOldColl = FALSE; //直前に当たっていたか
+	IsNewColl = FALSE; //現在に当たっていたか
+
 	//スタートボタンを押していない
 	IsStart = FALSE;
 
@@ -367,26 +373,48 @@ VOID MY_PLAY_PROC(VOID)
 	ball.centerX += cos(ball.Angle * DX_PI / 180.0) * ball.speed;
 	ball.centerY += sin(ball.Angle * DX_PI / 180.0) * ball.speed;
 
-	//ボールと画面外の判定
-	if (ball.centerX - ball.hankei < 0
-		|| ball.centerX + ball.hankei > GAME_WIDTH
-		|| ball.centerY - ball.hankei < 0
-		|| ball.centerY + ball.hankei > GAME_WIDTH)
-	{
-		ball.Angle = -ball.Angle;	//向きを反転
-	}
-	
 	//ボールとバーの当たり判定
-	if (MY_CHECK_BAR_BALL() == TRUE)
-	{
-		ball.Angle = -ball.Angle;	//向きを反転
-	}
+	MY_CHECK_BAR_BALL();
 
 	return;
 }
 
 //ボールとバーの当たり判定
-BOOL MY_CHECK_BAR_BALL(VOID)
+VOID MY_CHECK_BAR_BALL(VOID)
+{
+	//ボールと画面外の判定
+	if (ball.centerX - ball.hankei < 0
+		|| ball.centerX + ball.hankei > GAME_WIDTH
+		|| ball.centerY - ball.hankei < 0
+		|| ball.centerY + ball.hankei > GAME_HEIGHT)
+	{
+		ball.Angle = -ball.Angle;	//向きを反転
+	}
+
+	//直前の当たり判定情報を取得
+	IsOldColl = IsNewColl;
+
+	//ボールとバーの当たり判定
+	if (MY_CHECK_BAR_BALL_COLL() == TRUE)
+	{
+		IsNewColl = TRUE;	//現在は当たっている
+
+		//ボールがバーにめり込むと、ずっと反転処理をしてしまうので、
+		//初めての当たり判定のときのみ、反転させたい
+		if (IsOldColl == FALSE && IsNewColl == TRUE)
+		{
+			ball.Angle = -ball.Angle;	//向きを反転
+		}
+	}
+	else
+	{
+		IsNewColl = FALSE;	//現在は当たっていない
+	}
+	return;
+}
+
+//ボールとバーの当たり判定(処理)
+BOOL MY_CHECK_BAR_BALL_COLL(VOID)
 {
 	//四角と円の当たり判定
 	//参考：http://ftvoid.com/blog/post/300
