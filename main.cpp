@@ -94,6 +94,15 @@ typedef struct STRUCT_BAR
 
 }BAR;	//バー構造体
 
+typedef struct STRCUT_BALL
+{
+	double centerX;	//中心X位置
+	double centerY;	//中心Y位置
+	int hankei;		//半径
+	int speed;		//速度
+	int Angle;		//角度
+}BALL;
+
 //########## グローバル変数 ##########
 //FPS関連
 int StartTimeFps;				//測定開始時刻
@@ -107,11 +116,17 @@ char OldAllKeyState[KEY_MAX];	//すべてのキーの状態(直前)が入る
 //ゲーム関連
 GAME_SCENE GameScene;			//ゲームのシーンを管理
 
+//ボール
+BALL ball;
+
 //バー
 BAR bar;
 
 //ゲームスコア
 int GameTokuten = 0;
+
+//デフォルトのフォントサイズ
+int DefaultFontSize = 0;
 
 //ブロック
 BLOCK_KIND blockKind[BLOCK_TATE_MAX][BLOCK_YOKO_MAX]
@@ -126,6 +141,9 @@ BLOCK_KIND blockKind[BLOCK_TATE_MAX][BLOCK_YOKO_MAX]
 
 //ブロックの当たり判定
 RECT blockColl[BLOCK_TATE_MAX][BLOCK_YOKO_MAX];
+
+//スタートボタンを押したか
+BOOL IsStart = FALSE;
 
 //########## 外部のプロトタイプ宣言 ##########
 VOID MY_FPS_UPDATE(VOID);	//FPS値を計測、更新する
@@ -178,6 +196,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	//文字にアンチエイリアスをかける
 	ChangeFontType(DX_FONTTYPE_ANTIALIASING_8X8);
+
+	//デフォルトのフォントサイズを取得
+	DefaultFontSize = GetFontSize();
 
 	//無限ループ
 	while (TRUE)
@@ -274,8 +295,18 @@ VOID MY_PLAY_INIT(VOID)
 	bar.x = GAME_WIDTH / 2 - bar.width / 2;	//バーの初期位置は画面の中心
 	bar.y = GAME_HEIGHT - BAR_UNDER_HEIGHT;	//バーの初期位置は画面の下寄り
 
+	//ボール初期化
+	ball.hankei = 20;
+	ball.centerX = GAME_WIDTH / 2;
+	ball.centerY = BLOCK_UNDER_HEIGHT + ball.hankei;
+	ball.speed = 2;
+	ball.Angle = 0;	//デフォルトは下向き
+
 	//ゲームスコア初期化
 	GameTokuten = 0;
+
+	//スタートボタンを押していない
+	IsStart = FALSE;
 
 	return;
 }
@@ -300,6 +331,17 @@ VOID MY_PLAY_PROC(VOID)
 		return;
 	}
 
+	//エンターキーを押したらゲームスタート！
+	if (IsStart == FALSE)
+	{
+		if (MY_KEY_PUSH(KEY_INPUT_RETURN) == TRUE)
+		{
+			IsStart = TRUE;
+		}
+
+		return;	//ゲームの処理をしない
+	}
+
 	//右キーを押したら、バーが右へ移動する
 	if (MY_KEY_DOWN(KEY_INPUT_RIGHT) == TRUE)
 	{
@@ -320,6 +362,11 @@ VOID MY_PLAY_PROC(VOID)
 		}
 	}
 
+	//ボールの位置を変更
+	//弧度(ラジアン)＝度×円周率(π)/１８０
+	ball.centerX += cos(ball.Angle * DX_PI / 180.0) * ball.speed;
+	ball.centerY += sin(ball.Angle * DX_PI / 180.0) * ball.speed;
+	ball.Angle++;
 	return;
 }
 
@@ -406,11 +453,26 @@ VOID MY_PLAY_DRAW(VOID)
 		bar.y,
 		bar.x + bar.width,
 		bar.y + bar.height,
-		GetColor(0, 255, 0),
+		GetColor(0, 255, 255),
 		TRUE);
+
+	//ボールの描画
+	DrawCircle(ball.centerX, ball.centerY, ball.hankei, GetColor(255, 165, 0), TRUE);
 
 	//ゲームスコア描画
 	DrawFormatString(0, 20, GetColor(255, 255, 255), "SCORE:%05d", GameTokuten);
+
+	//スタートしていないとき
+	if (IsStart == FALSE)
+	{
+		//フォントサイズ変更
+		SetFontSize(100);
+		DrawString(
+			0,
+			GAME_HEIGHT / 2,
+			"PUSH ENTER", GetColor(255, 255, 255));
+		SetFontSize(DefaultFontSize);
+	}
 
 	DrawString(0, 0, "プレイ画面(スペースキーを押して下さい)", GetColor(255, 255, 255));
 	return;
