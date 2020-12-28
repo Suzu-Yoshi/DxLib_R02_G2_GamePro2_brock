@@ -377,33 +377,52 @@ VOID MY_PLAY_PROC(VOID)
 	ball.centerY += sin(ball.Angle * DX_PI / 180.0) * ball.speed;
 
 	//ボールと画面外の判定
+
+	//左側
 	if (ball.centerX - ball.hankei < 0)
 	{
 		ball.centerX = 0 + ball.hankei;			//位置を修正
-		ball.Angle = 180 - ball.Angle;						//向きを反転
+
+		//向きを反転
+		if (ball.Angle >= 180) { ball.Angle = ball.Angle + 90; }
+		else if (ball.Angle < 180) { ball.Angle = ball.Angle - 90; }
+
 		if (ball.speed > 1) { ball.speed--; }	//スピードダウン
 	}
 
-	if (ball.centerX + ball.hankei > GAME_WIDTH)
+	//右側
+	else if (ball.centerX + ball.hankei > GAME_WIDTH)
 	{
 		ball.centerX = GAME_WIDTH - ball.hankei;	//位置を修正
-		ball.Angle = 180 - ball.Angle;							//向きを反転
+		
+		//向きを反転
+		if (ball.Angle >= 180) { ball.Angle = ball.Angle - 90; }
+		else if (ball.Angle < 180) { ball.Angle = ball.Angle + 90; }
+
 		if (ball.speed > 1) { ball.speed--; }		//スピードダウン
 	}
 
-
-	if (ball.centerY - ball.hankei < 0)
+	//上側
+	else if (ball.centerY - ball.hankei < 0)
 	{
 		ball.centerY = 0 + ball.hankei;			//位置を修正
-		ball.Angle += 90;						//向きを反転
+
+		//向きを反転
+		if (ball.Angle >= 180) { ball.Angle = ball.Angle + 90; }
+		else if (ball.Angle < 180) { ball.Angle = ball.Angle - 90; }
+
 		if (ball.speed > 1) { ball.speed--; }	//スピードダウン
 	}
 
-
-	if (ball.centerY + ball.hankei > GAME_HEIGHT)
+	//下側
+	else if (ball.centerY + ball.hankei > GAME_HEIGHT)
 	{
 		ball.centerY = GAME_HEIGHT - ball.hankei;	//位置を修正
-		ball.Angle += 90;							//向きを反転
+
+		//向きを反転
+		if (ball.Angle >= 180) { ball.Angle = ball.Angle - 90; }
+		else if (ball.Angle < 180) { ball.Angle = ball.Angle + 90; }
+
 		if (ball.speed > 1) { ball.speed--; }		//スピードダウン
 	}
 
@@ -412,6 +431,10 @@ VOID MY_PLAY_PROC(VOID)
 
 	//ボールとブロックの当たり判定
 	MY_CHECK_BALL_BLOCK();
+
+	//角度を調整
+	if (ball.Angle < 0) { ball.Angle = 360 + ball.Angle; }
+	if (ball.Angle > 360) { ball.Angle = ball.Angle - 360; }
 
 	return;
 }
@@ -432,7 +455,7 @@ VOID MY_CHECK_BAR_BALL(VOID)
 		if (IsOldColl == FALSE && IsNewColl == TRUE)
 		{
 			ball.Angle = -ball.Angle;	//向きを反転
-			ball.speed+=2;				//スピードアップ
+			ball.speed += 2;				//スピードアップ
 		}
 	}
 	else
@@ -555,7 +578,7 @@ VOID MY_CHECK_BALL_BLOCK(VOID)
 				//ボールとブロックの当たり判定
 				if (MY_CHECK_BALL_BLOCK_COLL(blockColl[tate][yoko]) == TRUE)
 				{
-					ball.Angle =180 - ball.Angle;	//向きを反転
+					//ball.Angle = -ball.Angle;	//向きを反転
 
 					ball.speed++;		//スピードアップ
 
@@ -775,6 +798,8 @@ VOID MY_PLAY_DRAW(VOID)
 	}
 
 	DrawString(0, 0, "プレイ画面(スペースキーを押して下さい)", GetColor(255, 255, 255));
+
+	DrawFormatString(0, 40, GetColor(255, 255, 255), "Angle:%3d", ball.Angle);
 	return;
 }
 
