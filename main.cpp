@@ -377,6 +377,7 @@ VOID MY_PLAY_PROC(VOID)
 	ball.centerY += sin(ball.Angle * DX_PI / 180.0) * ball.speed;
 
 	//ボールと画面外の判定
+	//参考：https://noumenon-th.net/programming/2017/04/09/reflection/
 
 	//左側
 	if (ball.centerX - ball.hankei < 0)
@@ -421,10 +422,6 @@ VOID MY_PLAY_PROC(VOID)
 
 	//ボールとブロックの当たり判定
 	MY_CHECK_BALL_BLOCK();
-
-	//角度を調整
-	if (ball.Angle < 0) { ball.Angle = 360 + ball.Angle; }
-	if (ball.Angle > 360) { ball.Angle = ball.Angle - 360; }
 
 	return;
 }
